@@ -1,3 +1,4 @@
+# hot_tool/run.py
 import argparse
 import logging
 import sys
@@ -6,14 +7,8 @@ import hot_tool
 
 logger = logging.getLogger(__name__)
 
-main_script = """
-from hot_tool.main import main
 
-main()
-""".strip()
-
-
-def main():
+def run():
     subclasses = hot_tool.HotTool.__subclasses__()
     if len(subclasses) == 0:
         raise hot_tool.HotToolImplementationNotFoundError(
@@ -53,3 +48,19 @@ def main():
         sys.exit(1)
 
     return None
+
+
+def make_script_runnable(script: str) -> str:
+    from textwrap import dedent
+
+    return (
+        script.strip()
+        + "\n\n\n"
+        + dedent(
+            """
+            from hot_tool.run import run
+
+            run()
+            """
+        ).strip()
+    )

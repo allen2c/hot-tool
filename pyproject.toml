@@ -16,6 +16,9 @@ Repository = "https://github.com/allen2c/hot-tool"
 [tool.poetry]
 packages = [{ include = "hot_tool" }]
 
+[tool.poetry.scripts]
+hot-tool = "hot_tool.cli:main"
+
 [tool.poetry.extras]
 all = []
 

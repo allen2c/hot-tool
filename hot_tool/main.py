@@ -21,7 +21,8 @@ def main():
         )
     elif len(subclasses) > 1:
         raise hot_tool.HotMultipleToolImplementationsFoundError(
-            "Multiple implementations found for HotTool"
+            "Multiple implementations found for HotTool, "
+            + "only one in script is allowed."
         )
 
     subclass_cls = subclasses[0]

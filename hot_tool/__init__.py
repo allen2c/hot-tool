@@ -1,5 +1,3 @@
-import pathlib
-
 from ._hot_tool import HotTool
 from .exceptions import (
     HotMultipleToolImplementationsFoundError,
@@ -7,7 +5,7 @@ from .exceptions import (
 )
 from .main import main
 
-__version__ = pathlib.Path(__file__).parent.joinpath("VERSION").read_text().strip()
+__version__ = "0.0.1"
 __all__ = [
     "HotTool",
     "HotToolImplementationNotFoundError",

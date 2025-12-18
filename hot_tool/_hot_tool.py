@@ -1,7 +1,8 @@
-from abc import ABC, abstractmethod
+from typing import Optional
 
 
-class HotTool(ABC):
-    @abstractmethod
-    def run(self, arguments: str | None = None, *, context: str | None = None) -> str:
+class HotTool:
+    def run(
+        self, arguments: Optional[str] = None, context: Optional[str] = None
+    ) -> str:
         raise NotImplementedError("Subclasses must implement this method")

@@ -45,7 +45,7 @@ def main():
     try:
         result = subclass_cls().run(arguments=args.arguments, context=args.context)
         logger.info(f"Tool result: {str(result)[:100]}")
-        print(result)
+        print(result)  # print to stdout for LLM to read
 
     except Exception as e:
         logger.exception(e)

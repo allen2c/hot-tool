@@ -2,20 +2,38 @@
 import argparse
 import logging
 import sys
+from typing import Optional, Type, Union
 
-import hot_tool
+from hot_tool import (
+    HotMultipleToolImplementationsFoundError,
+    HotTool,
+    HotToolImplementationNotFoundError,
+)
 
 logger = logging.getLogger(__name__)
 
 
-def run():
-    subclasses = hot_tool.HotTool.__subclasses__()
+def run_tool(
+    tool: Union[Type[HotTool], HotTool],
+    arguments: Optional[str] = None,
+    context: Optional[str] = None,
+) -> str:
+    if isinstance(tool, Type) and issubclass(tool, HotTool):
+        tool = tool()
+    elif isinstance(tool, HotTool):
+        tool = tool
+    else:
+        raise ValueError(f"Invalid tool type: {type(tool)}")
+
+    return tool.run(arguments=arguments, context=context)
+
+
+def run_as_executable():
+    subclasses = HotTool.__subclasses__()
     if len(subclasses) == 0:
-        raise hot_tool.HotToolImplementationNotFoundError(
-            "No implementation found for HotTool."
-        )
+        raise HotToolImplementationNotFoundError("No implementation found for HotTool.")
     elif len(subclasses) > 1:
-        raise hot_tool.HotMultipleToolImplementationsFoundError(
+        raise HotMultipleToolImplementationsFoundError(
             "Multiple implementations found for HotTool, "
             + "only one in script is allowed."
         )
@@ -38,7 +56,7 @@ def run():
     args = parser.parse_args()
 
     try:
-        result = subclass_cls().run(arguments=args.arguments, context=args.context)
+        result = run_tool(subclass_cls, arguments=args.arguments, context=args.context)
         logger.info(f"Tool result: {str(result)[:100]}")
         print(result)  # print to stdout for LLM to read
 
@@ -58,9 +76,9 @@ def make_script_runnable(script: str) -> str:
         + "\n\n\n"
         + dedent(
             """
-            from hot_tool.run import run
+            from hot_tool.run import run_as_executable
 
-            run()
+            run_as_executable()
             """
         ).strip()
     )

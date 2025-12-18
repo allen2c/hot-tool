@@ -1,9 +1,5 @@
 # Hot-Tool
 
-[![PyPI version](https://img.shields.io/pypi/v/hot-tool.svg)](https://pypi.org/project/hot-tool/)
-[![Python Version](https://img.shields.io/pypi/pyversions/hot-tool.svg)](https://pypi.org/project/hot-tool/)
-[![License](https://img.shields.io/pypi/l/hot-tool.svg)](https://opensource.org/licenses/MIT)
-
 Build and package Python tools into standalone executables for LLM integration.
 
 ## Features

@@ -1,0 +1,73 @@
+site_name: Hot-Tool
+site_description: Build and package Python tools into standalone executables for LLM integration
+site_url: https://allen2c.github.io/hot-tool/
+repo_url: https://github.com/allen2c/hot-tool
+repo_name: allen2c/hot-tool
+
+theme:
+  name: material
+  palette:
+    # Light mode
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    # Dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+
+plugins:
+  - search
+
+markdown_extensions:
+  # Code blocks with syntax highlighting
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.inlinehilite
+
+  # Admonitions (callout boxes)
+  - admonition
+  - pymdownx.details
+
+  # Tabbed content
+  - pymdownx.tabbed:
+      alternate_style: true
+
+  # Emoji support
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator:
+        !!python/name:material.extensions.emoji.to_svg # Better lists and formatting
+
+
+  - def_list
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+  # Table of contents
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md

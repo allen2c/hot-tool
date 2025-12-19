@@ -68,6 +68,34 @@ hot-tool build get_my_ip.py -o get_my_ip
 # 198.51.100.156
 ```
 
+## Advanced Usage
+
+### Tool Inheritance for Reusability
+
+You can create reusable base tool classes and import them into your scripts:
+
+```python
+# base_tool.py
+from hot_tool import HotTool
+
+class BaseAPITool(HotTool):
+    def run(self, arguments=None, context=None):
+        # Shared logic here
+        return self.call_api()
+```
+
+```python
+# my_tool.py - Your main script
+from base_tool import BaseAPITool
+
+class MyCustomTool(BaseAPITool):  # Inherit from your base class
+    def run(self, arguments=None, context=None):
+        # Custom implementation
+        return "Custom result"
+```
+
+**Important**: Each script can only define **one concrete tool class** that implements `run()`. Imported base classes don't count toward this limit.
+
 ## License
 
 MIT License

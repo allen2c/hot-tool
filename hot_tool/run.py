@@ -31,15 +31,18 @@ def get_concrete_tool_classes(
     base_class: Type[HotTool], module_name: Optional[str] = None
 ) -> list[Type[HotTool]]:
     """
-    Get concrete tool classes that implement run().
+    Get concrete tool classes that implement both run() and function_definition().
     Optionally filter by module name to get only script-defined classes.
     """
     all_descendants = get_all_descendants(base_class)
     concrete_classes: list[Type[HotTool]] = []
 
     for cls in all_descendants:
-        # Check if this class defines its own run() method
-        if "run" in cls.__dict__:
+        # Check if this class defines both required methods
+        has_run = "run" in cls.__dict__
+        has_function_def = "function_definition" in cls.__dict__
+
+        if has_run and has_function_def:
             # If module_name is specified, only include classes from that module
             if module_name is None or cls.__module__ == module_name:
                 concrete_classes.append(cls)
@@ -76,17 +79,28 @@ def run_as_executable():
             raise HotToolImplementationNotFoundError(
                 "No tool class found in this script. "
                 "Please define a class that inherits from HotTool "
-                "and implements the run() method."
+                "and implements both run() and function_definition() methods."
             )
         else:
-            # Found classes but none implement run()
+            # Found classes but they don't implement required methods
             class_names = [cls.__name__ for cls in all_script_descendants]
-            raise HotToolImplementationNotFoundError(
-                f"Found tool class(es) {class_names} but none "
-                "implement the run() method. "
-                "Please add a run(self, arguments=None, context=None) "
-                "method to your tool class."
+
+            # Check which methods are missing for better error message
+            missing_methods: list[str] = []
+            sample_class = all_script_descendants[0]
+            if "run" not in sample_class.__dict__:
+                missing_methods.append("run()")
+            if "function_definition" not in sample_class.__dict__:
+                missing_methods.append("function_definition()")
+
+            missing_methods_str = " and ".join(missing_methods)
+            error_msg = (
+                f"Found tool class(es) {class_names} but missing "
+                f"required method(s): {missing_methods_str}. "
+                "Both run() and function_definition() must be implemented. "
+                "See examples/ directory for reference."
             )
+            raise HotToolImplementationNotFoundError(error_msg)
     elif len(concrete_tools) > 1:
         tool_names = [cls.__name__ for cls in concrete_tools]
         raise HotMultipleToolImplementationsFoundError(

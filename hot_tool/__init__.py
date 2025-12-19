@@ -4,7 +4,7 @@ from .exceptions import (
     HotToolImplementationNotFoundError,
 )
 
-__version__ = "0.0.2"
+__version__ = "0.0.3"
 __all__ = [
     "HotTool",
     "HotToolImplementationNotFoundError",

@@ -56,7 +56,8 @@ def build_command(script_filepath: Path, output_filepath: Path | None = None) ->
             "nuitka",
             "--standalone",
             "--onefile",
-            "--plugin-enable=upx",
+            "--onefile-tempdir-spec={CACHE_DIR}/nuitka_onefile_tempdir_spec/"
+            + output_filepath.stem,
             "--output-dir=.",
             "--remove-output",
             "-o",

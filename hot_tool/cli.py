@@ -10,8 +10,25 @@ import subprocess
 import sys
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from textwrap import dedent
 
-from hot_tool.run import make_script_runnable
+
+def make_script_runnable(script: str) -> str:
+    """
+    Transform a script into a runnable tool executable.
+    Appends the necessary code to call run_as_executable().
+    """
+    return (
+        script.strip()
+        + "\n\n\n"
+        + dedent(
+            """
+            from hot_tool.run import run_as_executable
+
+            run_as_executable()
+            """
+        ).strip()
+    )
 
 
 def build_command(script_filepath: Path, output_filepath: Path | None = None) -> Path:

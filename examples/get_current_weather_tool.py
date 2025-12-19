@@ -1,13 +1,26 @@
+"""
+hot-tool build examples/get_current_weather_tool.py
+"""
+
 import json
 from typing import Optional, Union
 from urllib.parse import quote
 
 import requests
 
-from hot_tool import HotTool
+from hot_tool import FunctionDefinition, HotTool
 
 
 class GetCurrentWeatherTool(HotTool):
+    def function_definition(self) -> FunctionDefinition:
+        return {
+            "name": "get_current_weather",
+            "description": "Get the current weather of a city",
+            "parameters": {
+                "city_name": "The name of the city to get the current weather of",
+            },
+        }
+
     def run(
         self, arguments: Optional[str] = None, context: Optional[str] = None
     ) -> str:

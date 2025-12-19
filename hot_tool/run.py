@@ -1,5 +1,6 @@
 # hot_tool/run.py
 import argparse
+import json
 import logging
 import sys
 from typing import Optional, Type, Union
@@ -96,6 +97,38 @@ def run_as_executable():
     tool_class = concrete_tools[0]
 
     parser = argparse.ArgumentParser(description="")
+
+    # Create subparsers for different commands
+    subparsers = parser.add_subparsers(
+        dest="subcommand",
+        help="Available commands",
+    )
+
+    # function-definition subcommand
+    subparsers.add_parser(
+        "function-definition",
+        help="Print the function definition in JSON format",
+    )
+
+    # Run subcommand (for explicit run, though we support implicit run too)
+    run_parser = subparsers.add_parser(
+        "run",
+        help="Run the tool (default behavior)",
+    )
+    run_parser.add_argument(
+        "--arguments",
+        type=str,
+        default=None,
+        help="Arguments for the tool. default is None.",
+    )
+    run_parser.add_argument(
+        "--context",
+        type=str,
+        default=None,
+        help="Context for the tool. default is None.",
+    )
+
+    # Add arguments to main parser for backward compatibility (no subcommand)
     parser.add_argument(
         "--arguments",
         type=str,
@@ -108,16 +141,36 @@ def run_as_executable():
         default=None,
         help="Context for the tool. default is None.",
     )
+
     args = parser.parse_args()
 
-    try:
-        result = run_tool(tool_class, arguments=args.arguments, context=args.context)
-        logger.info(f"Tool result: {str(result)[:100]}")
-        print(result)  # print to stdout for LLM to read
+    # Handle function-definition subcommand
+    if args.subcommand == "function-definition":
+        try:
+            tool_instance = tool_class()
+            function_def = tool_instance.function_definition()
+            print(json.dumps(function_def))
+            sys.exit(0)
+        except NotImplementedError:
+            logger.error("function_definition() method not implemented")
+            sys.exit(1)
+        except Exception as e:
+            logger.exception(e)
+            logger.error(f"Error getting function definition: {e}")
+            sys.exit(1)
 
-    except Exception as e:
-        logger.exception(e)
-        logger.error(f"Error running tool: {e}")
-        sys.exit(1)
+    # Handle run subcommand or default behavior (no subcommand)
+    else:
+        try:
+            result = run_tool(
+                tool_class, arguments=args.arguments, context=args.context
+            )
+            logger.info(f"Tool result: {str(result)[:100]}")
+            print(result)  # print to stdout for LLM to read
+
+        except Exception as e:
+            logger.exception(e)
+            logger.error(f"Error running tool: {e}")
+            sys.exit(1)
 
     return None

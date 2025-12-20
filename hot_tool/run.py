@@ -27,6 +27,21 @@ def get_all_descendants(base_class: Type) -> list[Type]:
     return result
 
 
+def is_method_implemented(
+    cls: Type, method_name: str, base_class: Type[HotTool]
+) -> bool:
+    """
+    Check if a method is implemented (not inherited directly from base_class).
+    Returns True if the method is defined in any class except base_class.
+    """
+    # Traverse MRO to find the first class that defines this method
+    for base in cls.__mro__:
+        if method_name in base.__dict__:
+            # Found the definer, check if it's not the base class
+            return base is not base_class
+    return False
+
+
 def get_concrete_tool_classes(
     base_class: Type[HotTool], module_name: Optional[str] = None
 ) -> list[Type[HotTool]]:
@@ -38,9 +53,9 @@ def get_concrete_tool_classes(
     concrete_classes: list[Type[HotTool]] = []
 
     for cls in all_descendants:
-        # Check if this class defines both required methods
-        has_run = "run" in cls.__dict__
-        has_function_def = "function_definition" in cls.__dict__
+        # Check if this class has both required methods implemented
+        has_run = is_method_implemented(cls, "run", base_class)
+        has_function_def = is_method_implemented(cls, "function_definition", base_class)
 
         if has_run and has_function_def:
             # If module_name is specified, only include classes from that module

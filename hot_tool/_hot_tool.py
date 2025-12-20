@@ -13,7 +13,7 @@ class FunctionDefinition(TypedDict, total=False):
 
 
 class HotTool:
-    def function_definition(self) -> FunctionDefinition:
+    def function_definition(self, context: Optional[str] = None) -> FunctionDefinition:
         raise NotImplementedError("Subclasses must implement this method")
 
     def run(

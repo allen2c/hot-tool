@@ -10,7 +10,7 @@ from hot_tool import FunctionDefinition, HotTool
 
 
 class GetMyIpTool(HotTool):
-    def function_definition(self) -> FunctionDefinition:
+    def function_definition(self, context: Optional[str] = None) -> FunctionDefinition:
         return {
             "name": "get_my_ip",
             "description": "Get my IP address",

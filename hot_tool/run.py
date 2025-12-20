@@ -119,9 +119,15 @@ def run_as_executable():
     )
 
     # function-definition subcommand
-    subparsers.add_parser(
+    function_def_parser = subparsers.add_parser(
         "function-definition",
         help="Print the function definition in JSON format",
+    )
+    function_def_parser.add_argument(
+        "--context",
+        type=str,
+        default=None,
+        help="Context for the tool. default is None.",
     )
 
     # Run subcommand (for explicit run, though we support implicit run too)
@@ -162,7 +168,7 @@ def run_as_executable():
     if args.subcommand == "function-definition":
         try:
             tool_instance = tool_class()
-            function_def = tool_instance.function_definition()
+            function_def = tool_instance.function_definition(context=args.context)
             print(json.dumps(function_def))
             sys.exit(0)
         except NotImplementedError:

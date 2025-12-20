@@ -89,13 +89,24 @@ hot-tool build get_my_ip.py -o get_my_ip
 
 This outputs the function definition in JSON format, compatible with OpenAI's function calling API. You can use this to dynamically register tools with LLMs.
 
+You can also pass context to customize the function definition:
+
+```shell
+./get_my_ip function-definition --context "user prefers metric units"
+# Function definition may be adjusted based on context
+```
+
 ## Required Methods
 
 Every tool must implement two methods:
 
-### 1. `function_definition()` → `FunctionDefinition`
+### 1. `function_definition(context)` → `FunctionDefinition`
 
-Returns metadata about the tool for LLM integration. The `FunctionDefinition` TypedDict has the following structure:
+Returns metadata about the tool for LLM integration. Can optionally accept context to customize the function definition dynamically.
+
+- `context` (Optional[str]): Additional context to customize the function definition
+
+The `FunctionDefinition` TypedDict has the following structure:
 
 ```python
 {
@@ -109,7 +120,7 @@ Returns metadata about the tool for LLM integration. The `FunctionDefinition` Ty
 **Example:**
 
 ```python
-def function_definition(self) -> FunctionDefinition:
+def function_definition(self, context: Optional[str] = None) -> FunctionDefinition:
     return {
         "name": "get_current_weather",
         "description": "Get the current weather of a city",

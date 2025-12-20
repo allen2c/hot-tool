@@ -8,7 +8,7 @@ from hot_tool import FunctionDefinition, HotTool
 
 
 class HelloWorldTool(HotTool):
-    def function_definition(self) -> FunctionDefinition:
+    def function_definition(self, context: Optional[str] = None) -> FunctionDefinition:
         return {
             "name": "hello_world",
             "description": "Say hello to the world",

@@ -12,7 +12,7 @@ from hot_tool import FunctionDefinition, HotTool
 
 
 class GetCurrentWeatherTool(HotTool):
-    def function_definition(self) -> FunctionDefinition:
+    def function_definition(self, context: Optional[str] = None) -> FunctionDefinition:
         return {
             "name": "get_current_weather",
             "description": "Get the current weather of a city",

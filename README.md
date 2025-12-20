@@ -8,7 +8,8 @@ Build and package Python tools into standalone executables for LLM integration.
 
 ## Features
 
-- **Define Tools Simply** - Inherit from `HotTool` class and implement the `run()` method
+- **Define Tools Simply** - Inherit from `HotTool` class and implement required methods
+- **LLM-Ready** - Built-in support for function definitions compatible with OpenAI's function calling
 - **Build Standalone Executables** - Compile Python tools into single binary files using `hot-tool build`
 - **Run Without Dependencies** - Execute tools without Python installation or source code access
 
@@ -28,10 +29,17 @@ from typing import Optional
 
 import requests
 
-from hot_tool import HotTool
+from hot_tool import FunctionDefinition, HotTool
 
 
 class GetMyIpTool(HotTool):
+    def function_definition(self) -> FunctionDefinition:
+        return {
+            "name": "get_my_ip",
+            "description": "Get my IP address",
+            "parameters": {},
+        }
+
     def run(
         self, arguments: Optional[str] = None, context: Optional[str] = None
     ) -> str:
@@ -72,6 +80,77 @@ hot-tool build get_my_ip.py -o get_my_ip
 # 198.51.100.156
 ```
 
+### Get Function Definition (for LLM Integration)
+
+```shell
+./get_my_ip function-definition
+# {"name": "get_my_ip", "description": "Get my IP address", "parameters": {}}
+```
+
+This outputs the function definition in JSON format, compatible with OpenAI's function calling API. You can use this to dynamically register tools with LLMs.
+
+You can also pass context to customize the function definition:
+
+```shell
+./get_my_ip function-definition --context "user prefers metric units"
+# Function definition may be adjusted based on context
+```
+
+## Required Methods
+
+Every tool must implement two methods:
+
+### 1. `function_definition(context)` → `FunctionDefinition`
+
+Returns metadata about the tool for LLM integration. Can optionally accept context to customize the function definition dynamically.
+
+- `context` (Optional[str]): Additional context to customize the function definition
+
+The `FunctionDefinition` TypedDict has the following structure:
+
+```python
+{
+    "name": str,              # Required: Tool name (e.g., "get_weather")
+    "description": str,       # Optional: What the tool does
+    "parameters": dict,       # Optional: Parameter descriptions
+    "strict": bool,           # Optional: Strict mode for OpenAI
+}
+```
+
+**Example:**
+
+```python
+def function_definition(self, context: Optional[str] = None) -> FunctionDefinition:
+    return {
+        "name": "get_current_weather",
+        "description": "Get the current weather of a city",
+        "parameters": {
+            "city_name": "The name of the city to get the current weather of",
+        },
+    }
+```
+
+### 2. `run(arguments, context)` → `str`
+
+Executes the tool logic and returns a string result.
+
+- `arguments` (Optional[str]): JSON string containing input parameters
+- `context` (Optional[str]): Additional context information
+- Returns: String output for the LLM
+
+**Example:**
+
+```python
+def run(
+    self, arguments: Optional[str] = None, context: Optional[str] = None
+) -> str:
+    import json
+    args = json.loads(arguments or "{}")
+    city_name = args.get("city_name", "New York")
+    # ... your logic here ...
+    return "Current weather: Sunny, 72°F"
+```
+
 ## Advanced Usage
 
 ### Tool Inheritance for Reusability
@@ -98,7 +177,7 @@ class MyCustomTool(BaseAPITool):  # Inherit from your base class
         return "Custom result"
 ```
 
-**Important**: Each script can only define **one concrete tool class** that implements `run()`. Imported base classes don't count toward this limit.
+**Important**: Each script can only define **one concrete tool class** that implements both `run()` and `function_definition()`. Imported base classes don't count toward this limit.
 
 ## License
 

@@ -1,11 +1,22 @@
+"""
+hot-tool build examples/get_my_ip.py
+"""
+
 from typing import Optional
 
 import requests
 
-from hot_tool import HotTool
+from hot_tool import FunctionDefinition, HotTool
 
 
 class GetMyIpTool(HotTool):
+    def function_definition(self, context: Optional[str] = None) -> FunctionDefinition:
+        return {
+            "name": "get_my_ip",
+            "description": "Get my IP address",
+            "parameters": {},
+        }
+
     def run(
         self, arguments: Optional[str] = None, context: Optional[str] = None
     ) -> str:

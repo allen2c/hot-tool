@@ -1,5 +1,6 @@
 # hot_tool/run.py
 import argparse
+import json
 import logging
 import sys
 from typing import Optional, Type, Union
@@ -30,15 +31,18 @@ def get_concrete_tool_classes(
     base_class: Type[HotTool], module_name: Optional[str] = None
 ) -> list[Type[HotTool]]:
     """
-    Get concrete tool classes that implement run().
+    Get concrete tool classes that implement both run() and function_definition().
     Optionally filter by module name to get only script-defined classes.
     """
     all_descendants = get_all_descendants(base_class)
     concrete_classes: list[Type[HotTool]] = []
 
     for cls in all_descendants:
-        # Check if this class defines its own run() method
-        if "run" in cls.__dict__:
+        # Check if this class defines both required methods
+        has_run = "run" in cls.__dict__
+        has_function_def = "function_definition" in cls.__dict__
+
+        if has_run and has_function_def:
             # If module_name is specified, only include classes from that module
             if module_name is None or cls.__module__ == module_name:
                 concrete_classes.append(cls)
@@ -75,17 +79,28 @@ def run_as_executable():
             raise HotToolImplementationNotFoundError(
                 "No tool class found in this script. "
                 "Please define a class that inherits from HotTool "
-                "and implements the run() method."
+                "and implements both run() and function_definition() methods."
             )
         else:
-            # Found classes but none implement run()
+            # Found classes but they don't implement required methods
             class_names = [cls.__name__ for cls in all_script_descendants]
-            raise HotToolImplementationNotFoundError(
-                f"Found tool class(es) {class_names} but none "
-                "implement the run() method. "
-                "Please add a run(self, arguments=None, context=None) "
-                "method to your tool class."
+
+            # Check which methods are missing for better error message
+            missing_methods: list[str] = []
+            sample_class = all_script_descendants[0]
+            if "run" not in sample_class.__dict__:
+                missing_methods.append("run()")
+            if "function_definition" not in sample_class.__dict__:
+                missing_methods.append("function_definition()")
+
+            missing_methods_str = " and ".join(missing_methods)
+            error_msg = (
+                f"Found tool class(es) {class_names} but missing "
+                f"required method(s): {missing_methods_str}. "
+                "Both run() and function_definition() must be implemented. "
+                "See examples/ directory for reference."
             )
+            raise HotToolImplementationNotFoundError(error_msg)
     elif len(concrete_tools) > 1:
         tool_names = [cls.__name__ for cls in concrete_tools]
         raise HotMultipleToolImplementationsFoundError(
@@ -96,6 +111,44 @@ def run_as_executable():
     tool_class = concrete_tools[0]
 
     parser = argparse.ArgumentParser(description="")
+
+    # Create subparsers for different commands
+    subparsers = parser.add_subparsers(
+        dest="subcommand",
+        help="Available commands",
+    )
+
+    # function-definition subcommand
+    function_def_parser = subparsers.add_parser(
+        "function-definition",
+        help="Print the function definition in JSON format",
+    )
+    function_def_parser.add_argument(
+        "--context",
+        type=str,
+        default=None,
+        help="Context for the tool. default is None.",
+    )
+
+    # Run subcommand (for explicit run, though we support implicit run too)
+    run_parser = subparsers.add_parser(
+        "run",
+        help="Run the tool (default behavior)",
+    )
+    run_parser.add_argument(
+        "--arguments",
+        type=str,
+        default=None,
+        help="Arguments for the tool. default is None.",
+    )
+    run_parser.add_argument(
+        "--context",
+        type=str,
+        default=None,
+        help="Context for the tool. default is None.",
+    )
+
+    # Add arguments to main parser for backward compatibility (no subcommand)
     parser.add_argument(
         "--arguments",
         type=str,
@@ -108,16 +161,36 @@ def run_as_executable():
         default=None,
         help="Context for the tool. default is None.",
     )
+
     args = parser.parse_args()
 
-    try:
-        result = run_tool(tool_class, arguments=args.arguments, context=args.context)
-        logger.info(f"Tool result: {str(result)[:100]}")
-        print(result)  # print to stdout for LLM to read
+    # Handle function-definition subcommand
+    if args.subcommand == "function-definition":
+        try:
+            tool_instance = tool_class()
+            function_def = tool_instance.function_definition(context=args.context)
+            print(json.dumps(function_def))
+            sys.exit(0)
+        except NotImplementedError:
+            logger.error("function_definition() method not implemented")
+            sys.exit(1)
+        except Exception as e:
+            logger.exception(e)
+            logger.error(f"Error getting function definition: {e}")
+            sys.exit(1)
 
-    except Exception as e:
-        logger.exception(e)
-        logger.error(f"Error running tool: {e}")
-        sys.exit(1)
+    # Handle run subcommand or default behavior (no subcommand)
+    else:
+        try:
+            result = run_tool(
+                tool_class, arguments=args.arguments, context=args.context
+            )
+            logger.info(f"Tool result: {str(result)[:100]}")
+            print(result)  # print to stdout for LLM to read
+
+        except Exception as e:
+            logger.exception(e)
+            logger.error(f"Error running tool: {e}")
+            sys.exit(1)
 
     return None
